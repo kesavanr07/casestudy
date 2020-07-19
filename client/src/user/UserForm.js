@@ -31,6 +31,8 @@ class UserForm extends Component {
             data_added : false
         };
         this.selectedLocation = null;
+        this.save_button_triggered = false;
+
         this.all_location = [
             { Id: 'chennai', Location: 'chennai' },
             { Id: 'bangalore', Location: 'Bangalore' },
@@ -132,7 +134,6 @@ class UserForm extends Component {
         Object.keys(input_fields).map((key) => {
             if(key !== 'err_msg' && key !== 'data_added' && key !== 'profile_file' && key !== 'profile_selected') {
                 if(!input_fields[key] || input_fields[key].length === 0) {
-                    console.log('input_fields[] :>> ', input_fields['profile_selected']);
                     if(key === 'profile' && !input_fields['profile_selected']) {
                         input_fields.err_msg[key] = "Please select Profile picture";
                         input_fields.err_msg.is_error = true;
@@ -207,9 +208,11 @@ class UserForm extends Component {
                 err_msg.save_user_msg = (user_data && user_data.data) || "Unexpected error occured";
                 err_msg.is_error = true;
             }
+            this.save_button_triggered = false;
         } catch (error) {
             err_msg.save_user_msg = "Unexpected error occured"
             err_msg.is_error= true;
+            this.save_button_triggeredsave_button_triggered = false;
         }
         if(data_added === true) {
             this.setState({
@@ -225,8 +228,9 @@ class UserForm extends Component {
 
 
     uploadProfile = async () => {
+        if(this.save_button_triggered) return;
+            this.save_button_triggered = true
         const {profile_file, err_msg} = this.state;
-        var profile = null;
         try {
             const form_data = new FormData();
 
@@ -239,19 +243,23 @@ class UserForm extends Component {
             const profile_data = await response.json();
 
             if(profile_data && profile_data.status === "success") {
-                profile = profile_data.data;
+                this.setState({ 
+                    profile : profile_data.data, 
+                }, () => {
+                    this.addUser();
+                });
             } else {
+                this.save_button_triggered = false;
                 err_msg.profile = (profile_data && profile_data.data) || "Unexpected error occured";
                 err_msg.is_error = true;
+                this.setState({err_msg });
             }
         } catch (error) {
+            this.save_button_triggered = false;
             err_msg.profile = "Unexpected error on uploading file";
             err_msg.is_error= true;
+            this.setState({err_msg });
         }
-
-        await this.setState({ profile, err_msg });
-
-        if(profile) this.addUser();
     }
 
     getFileValue = (event) => {
@@ -460,7 +468,7 @@ class UserForm extends Component {
                     </Form.Group>
                     <br/>
                     <Col md={{ span: 10, offset: 1 }}>
-                        <Button variant="secondary" className="pull-right" onClick={()=> {this.resetForm(true)}}>Reset</Button>
+                        <Button variant="secondary" disabled={this.save_button_triggered} className="pull-right" onClick={()=> {this.resetForm(true)}}>Reset</Button>
                         <Button className="float-right" onClick={this.submitUserDetails}>Add</Button>
                     </Col>
                 </Form>

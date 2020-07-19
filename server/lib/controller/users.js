@@ -36,7 +36,7 @@ class UserData {
             const user_data = await Users.find({email_id: email_id});
 
             if(user_data && user_data[0] && user_data[0].email_id) {
-                return callback(null, "Email Id already exist added successfully");
+                return callback("Email Id already exist added successfully");
             }
 
             const new_user = Users({

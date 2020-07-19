@@ -11,7 +11,7 @@ class UserList extends Component {
             lis_users_err : "",
         }
     }
-    Profile
+    
     getUsers = async () => {
 
         var {all_user, lis_users_err} = this.state;
